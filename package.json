@@ -10,6 +10,7 @@
     "level-test": "~1.5.1",
     "readable-stream": "~1.0.2",
     "shasum": "~1.0.0",
-    "through": "~2.3.4"
+    "through": "~2.3.4",
+    "pull-stream": "~2.20.1"
   }
 }

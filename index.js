@@ -8,7 +8,7 @@ inherits(Join, Readable);
 
 function Join (db, opts) {
     if (!(this instanceof Join)) return new Join(db, opts);
-    Readable.call(this);
+    Readable.call(this, { objectMode: true });
     
     if (db && !db.put) {
         opts = db;
