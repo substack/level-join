@@ -11,6 +11,8 @@
     "readable-stream": "~1.0.2",
     "shasum": "~1.0.0",
     "through": "~2.3.4",
-    "pull-stream": "~2.20.1"
+    "pull-stream": "~2.20.1",
+    "pathway": "~0.1.2",
+    "n-pair": "~0.0.0"
   }
 }

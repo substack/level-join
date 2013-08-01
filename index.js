@@ -2,6 +2,8 @@ var Readable = require('stream').Readable;
 var inherits = require('inherits');
 var search = require('level-search');
 var pull = require('pull-stream');
+var pathway = require('pathway');
+var npair = require('n-pair');
 
 module.exports = Join;
 inherits(Join, Readable);
@@ -18,23 +20,66 @@ function Join (db, opts) {
     
     this.search = opts.search || search(db, 'index');
     this._pull = {};
+    this._names = [];
+    this._pivot = {};
     this._queue = {};
-    this._keys = [];
+    this._open = 0;
 }
 
-Join.prototype._read = function (next) {
-    console.log('_READ!');
-    this._pull.id(null, function (end, data) {
-        console.log(end, data);
+Join.prototype._read = function () {
+    var self = this;
+    self._names.forEach(function (name) {
+        var keys = self._pivot[name];
+        
+        self._pull[name](null, function (end, data) {
+            if (end) {
+                if (-- self.open === 0) self.push(null);
+                return;
+            }
+            
+            var pivot = pathway(data.value, keys);
+            if (pivot.length === 0) return;
+            var key = pivot[0];
+            if (!self._queue[key]) self._queue[key] = {};
+            if (!self._queue[key][name]) self._queue[key][name] = [];
+            
+            self._queue[key][name].push(data.value);
+            
+            self._eachPair(key, name, data.value, function (pair) {
+                self.push(pair);
+            });
+        });
     });
 };
 
-Join.prototype.from = function (key, keys) {
+Join.prototype._eachPair = function (key, name, value, cb) {
     var self = this;
-    var stream = self.search.search(keys);
-    self._keys.push(key);
+    
+    var sets = [];
+    for (var i = 0, l = self._names.length; i < l; i++) {
+        var n = self._names[i];
+        if (!self._queue[key][n]) return;
+        if (name !== n) sets.push(self._queue[key][n]);
+    }
+    sets.splice(self._names.indexOf(name), 0, [ value ]);
+    
+    npair(sets, function (values) {
+        var pairs = {};
+        for (var i = 0, l = self._names.length; i < l; i++) {
+            pairs[self._names[i]] = values[i];
+        }
+        cb(pairs);
+    });
+};
+
+Join.prototype.add = function (name, pivotKeys, filterKeys) {
+    var self = this;
+    var stream = self.search.search(filterKeys);
+    self._names.push(name);
+    self._pivot[name] = pivotKeys;
+    self._open ++;
     
     pull(stream, function (read) {
-        self._pull[key] = read;
+        self._pull[name] = read;
     });
 };
