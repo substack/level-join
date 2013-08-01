@@ -1,9 +1,9 @@
 var sub = require('level-sublevel');
+var level = require('level-test')();
 var through = require('through');
 
-var db = sub(require('level')(__dirname + '/db', { valueEncoding: 'json' }));
+var db = sub(level('testing', { valueEncoding: 'json' }));
 var join = require('../')(db);
-//var search = require('level-search')(db, 'index');
 
 db.batch(require('./data.json').map(function (row) {
     var key = Math.random().toString(16).slice(2);
