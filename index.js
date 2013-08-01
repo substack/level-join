@@ -1,4 +1,4 @@
-var Readable = require('stream').Readable;
+var Readable = require('readable-stream/readable');
 var inherits = require('inherits');
 var search = require('level-search');
 var pull = require('pull-stream');
