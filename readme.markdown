@@ -2,6 +2,8 @@
 
 join leveldb documents based on common nested values
 
+[![build status](https://secure.travis-ci.org/substack/level-join.png)](http://travis-ci.org/substack/level-join)
+
 # example
 
 Given this dataset with `commit` and `output` rows:
