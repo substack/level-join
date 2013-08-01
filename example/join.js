@@ -1,9 +1,9 @@
 var sub = require('level-sublevel');
-var level = require('level-test')();
+var level = require('level');
 var through = require('through');
 var shasum = require('shasum');
 
-var db = sub(level('testing', { valueEncoding: 'json' }));
+var db = sub(level('/tmp/testdb', { valueEncoding: 'json' }));
 var join = require('../')(db);
 
 db.batch(require('./data.json').map(function (row) {
