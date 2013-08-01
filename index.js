@@ -23,17 +23,28 @@ function Join (db, opts) {
     this._names = [];
     this._pivot = {};
     this._queue = {};
+    this._pending = 0;
+    this._alive = {};
     this._open = 0;
 }
 
 Join.prototype._read = function () {
     var self = this;
+    
+    self._pending += self._names.length;
+    
     self._names.forEach(function (name) {
+        if (!self._alive[name]) return -- self._pending;
         var keys = self._pivot[name];
         
         self._pull[name](null, function (end, data) {
+            self._pending --;
+            
             if (end) {
-                if (-- self.open === 0) self.push(null);
+                self._alive[name] = false;
+                if (-- self._open === 0 && self._pending == 0) {
+                    self.push(null);
+                }
                 return;
             }
             
@@ -76,8 +87,9 @@ Join.prototype.add = function (name, pivotKeys, filterKeys) {
     var self = this;
     var stream = self.search.search(filterKeys);
     self._names.push(name);
-    self._pivot[name] = pivotKeys;
     self._open ++;
+    self._alive[name] = true;
+    self._pivot[name] = pivotKeys;
     
     pull(stream, function (read) {
         self._pull[name] = read;
